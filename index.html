@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Financial Dashboard — JP</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: #111827; min-height: 100vh; padding: 32px 16px; }
+  .page { max-width: 880px; margin: 0 auto; background: #fff; border-radius: 20px; padding: 32px; box-shadow: 0 4px 24px rgba(0,0,0,.08); }
+
+  .top-bar { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+  .avatar { width: 42px; height: 42px; border-radius: 50%; background: #dbeafe; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #1d4ed8; flex-shrink: 0; }
+  .header-title { font-size: 19px; font-weight: 700; color: #111827; }
+  .header-sub { font-size: 12px; color: #6b7280; margin-top: 2px; }
+
+  .section-title { font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: .09em; margin: 0 0 12px; }
+
+  .info-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
+  .info-card { background: #1e3a6e; border-radius: 12px; padding: 14px 16px; }
+  .info-label { font-size: 11px; color: #93c5fd; margin-bottom: 4px; }
+  .info-val { font-size: 22px; font-weight: 700; color: #fff; }
+  .info-val.green { color: #4ade80; }
+
+  .stat-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+  .stat-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px 14px; }
+  .stat-label { font-size: 11px; color: #6b7280; margin-bottom: 3px; }
+  .stat-val { font-size: 20px; font-weight: 700; color: #111827; }
+  .stat-val.orange { color: #f97316; }
+  .stat-val.green { color: #16a34a; }
+
+  .summary-box { background: #eff6ff; border-left: 3px solid #3b82f6; border-radius: 0 8px 8px 0; padding: 10px 14px; font-size: 13px; color: #374151; line-height: 1.6; margin-bottom: 14px; }
+
+  .progress-labels { display: flex; justify-content: space-between; font-size: 11px; color: #9ca3af; margin-bottom: 4px; }
+  .progress-track { width: 100%; height: 6px; background: #e5e7eb; border-radius: 3px; margin-bottom: 16px; }
+  .progress-fill { height: 6px; border-radius: 3px; background: linear-gradient(90deg, #3b82f6, #60a5fa); width: 100%; }
+
+  .table-wrap { max-height: 340px; overflow-y: auto; border-radius: 10px; border: 1px solid #e5e7eb; margin-bottom: 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead th { position: sticky; top: 0; background: #f9fafb; font-size: 11px; color: #6b7280; font-weight: 600; padding: 8px; text-align: left; border-bottom: 1px solid #e5e7eb; z-index: 1; }
+  td { padding: 7px 8px; color: #374151; border-bottom: 1px solid #f3f4f6; }
+  td.or { color: #f97316; }
+  td.gr { color: #059669; }
+  tr.last-row td { color: #16a34a; font-weight: 600; }
+  .mini-bar { height: 5px; border-radius: 3px; background: #3b82f6; display: inline-block; vertical-align: middle; }
+  .done-badge { display: inline-block; background: #dcfce7; color: #15803d; font-size: 9px; padding: 1px 5px; border-radius: 4px; margin-left: 4px; font-weight: 700; }
+
+  hr { border: none; border-top: 1px solid #e5e7eb; margin: 28px 0; }
+
+  .calc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+  .calc-field { background: #fff; border: 1.5px solid #d1d5db; border-radius: 12px; padding: 12px 14px; transition: border-color .15s; }
+  .calc-field:focus-within { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.1); }
+  .calc-field label { display: block; font-size: 11px; color: #6b7280; font-weight: 600; margin-bottom: 5px; }
+  .calc-field .input-wrap { display: flex; align-items: center; gap: 4px; }
+  .calc-field .prefix { font-size: 17px; font-weight: 600; color: #9ca3af; }
+  .calc-field input { border: none; background: transparent; font-size: 22px; font-weight: 700; color: #111827; width: 100%; outline: none; font-family: inherit; }
+  .calc-field input:focus { color: #3b82f6; }
+  .calc-field .suffix { font-size: 14px; font-weight: 600; color: #9ca3af; white-space: nowrap; }
+
+  .score-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+  .score-card { background: #fff; border: 1.5px solid #d1d5db; border-radius: 12px; padding: 14px 16px; transition: border-color .15s; }
+  .score-card:focus-within { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.1); }
+  .score-label { font-size: 11px; color: #6b7280; font-weight: 600; margin-bottom: 4px; }
+  .score-input { border: none; background: transparent; font-size: 32px; font-weight: 700; color: #111827; width: 100%; outline: none; font-family: inherit; margin: 4px 0 8px; display: block; }
+  .score-input:focus { color: #3b82f6; }
+  .score-pill { font-size: 11px; padding: 3px 10px; border-radius: 20px; display: inline-block; font-weight: 600; }
+
+  .range-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+  .proj-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; }
+  .proj-row { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: #374151; margin-bottom: 8px; }
+  .proj-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .proj-note { font-size: 11px; color: #9ca3af; margin-top: 8px; }
+
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; color: #6b7280; margin-top: 12px; }
+  .legend-dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+
+  .warn { color: #f97316; }
+
+  @media (max-width: 600px) {
+    body { padding: 12px 8px; }
+    .page { padding: 20px 14px; border-radius: 14px; }
+    .info-cards, .calc-grid, .score-cards { grid-template-columns: 1fr; }
+    .stat-cards { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media print {
+    body { background: white; padding: 0; }
+    .page { box-shadow: none; border-radius: 0; }
+    .table-wrap { max-height: none; overflow: visible; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="top-bar">
+    <div class="avatar">JP</div>
+    <div>
+      <div class="header-title">Financial Dashboard</div>
+      <div class="header-sub">Visa Platinum Variable &middot; As of <span id="today-date"></span></div>
+    </div>
+  </div>
+
+  <p class="section-title">Debt Payoff Calculator</p>
+  <div class="calc-grid">
+    <div class="calc-field">
+      <label>Balance</label>
+      <div class="input-wrap"><span class="prefix">$</span><input id="inp-balance" type="number" value="17762" min="0" step="1"></div>
+    </div>
+    <div class="calc-field">
+      <label>Monthly Payment</label>
+      <div class="input-wrap"><span class="prefix">$</span><input id="inp-payment" type="number" value="1200" min="1" step="50"></div>
+    </div>
+    <div class="calc-field">
+      <label>APR</label>
+      <div class="input-wrap"><input id="inp-apr" type="number" value="10.49" min="0" max="60" step="0.01" style="text-align:right;"><span class="suffix">%</span></div>
+    </div>
+  </div>
+
+  <div class="info-cards">
+    <div class="info-card"><div class="info-label">Debt-free in</div><div class="info-val" id="payoff-time">—</div></div>
+    <div class="info-card"><div class="info-label">Target date</div><div class="info-val" id="target-date">—</div></div>
+    <div class="info-card"><div class="info-label">Interest saved vs minimums</div><div class="info-val green" id="int-saved">—</div></div>
+  </div>
+  <div style="height:10px;"></div>
+  <div class="stat-cards">
+    <div class="stat-card"><div class="stat-label">Balance</div><div class="stat-val" id="disp-balance">—</div></div>
+    <div class="stat-card"><div class="stat-label">Monthly payment</div><div class="stat-val green" id="disp-payment">—</div></div>
+    <div class="stat-card"><div class="stat-label">Total interest</div><div class="stat-val orange" id="total-int">—</div></div>
+    <div class="stat-card"><div class="stat-label">Total paid</div><div class="stat-val" id="total-paid">—</div></div>
+  </div>
+
+  <div class="summary-box" id="summary"></div>
+
+  <div class="progress-labels">
+    <span>Month 1 &mdash; <span id="start-month-label"></span></span>
+    <span id="end-label"></span>
+  </div>
+  <div class="progress-track"><div class="progress-fill"></div></div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>#</th><th>Date</th><th>Payment</th><th>Interest</th><th>Principal</th><th>Balance</th><th>% Paid</th></tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+
+  <hr>
+
+  <p class="section-title">Credit Scores &mdash; FICO Score 8</p>
+  <div class="score-cards">
+    <div class="score-card">
+      <div class="score-label">Experian</div>
+      <input class="score-input" id="score-ex" type="number" value="600" min="300" max="850">
+      <span class="score-pill" id="pill-ex"></span>
+    </div>
+    <div class="score-card">
+      <div class="score-label">Equifax <span style="color:#16a34a;font-size:11px;" id="eq-delta">+21 pts</span></div>
+      <input class="score-input" id="score-eq" type="number" value="608" min="300" max="850">
+      <span class="score-pill" id="pill-eq"></span>
+    </div>
+    <div class="score-card">
+      <div class="score-label">TransUnion <span style="color:#16a34a;font-size:11px;" id="tu-delta">+24 pts</span></div>
+      <input class="score-input" id="score-tu" type="number" value="608" min="300" max="850">
+      <span class="score-pill" id="pill-tu"></span>
+    </div>
+  </div>
+
+  <div class="range-card">
+    <div class="section-title" style="margin-bottom:12px;">Score Range (300&ndash;850)</div>
+    <div id="stagger-area" style="position:relative;height:78px;"></div>
+    <canvas id="score-bar" height="12" style="width:100%;display:block;border-radius:6px;"></canvas>
+    <div style="position:relative;height:18px;margin-top:4px;">
+      <span style="position:absolute;left:0;font-size:10px;color:#9ca3af;">300</span>
+      <span id="lbl580" style="position:absolute;font-size:10px;color:#9ca3af;transform:translateX(-50%);">580</span>
+      <span id="lbl670" style="position:absolute;font-size:10px;color:#9ca3af;transform:translateX(-50%);">670</span>
+      <span id="lbl740" style="position:absolute;font-size:10px;color:#9ca3af;transform:translateX(-50%);">740</span>
+      <span id="lbl800" style="position:absolute;font-size:10px;color:#9ca3af;transform:translateX(-50%);">800</span>
+      <span style="position:absolute;right:0;font-size:10px;color:#9ca3af;">850</span>
+    </div>
+    <div class="legend">
+      <span><span class="legend-dot" style="background:#E24B4A;"></span>Poor 300&ndash;579</span>
+      <span><span class="legend-dot" style="background:#EF9F27;"></span>Fair 580&ndash;669</span>
+      <span><span class="legend-dot" style="background:#97C459;"></span>Good 670&ndash;739</span>
+      <span><span class="legend-dot" style="background:#1D9E75;"></span>Very Good 740&ndash;799</span>
+      <span><span class="legend-dot" style="background:#0F6E56;"></span>Exceptional 800+</span>
+    </div>
+  </div>
+
+  <div class="proj-card">
+    <div class="section-title" style="margin-bottom:12px;">Projected Score Impact from Debt Payoff</div>
+    <div class="proj-row"><div class="proj-dot" style="background:#EF9F27;"></div><span id="proj-now"></span></div>
+    <div class="proj-row"><div class="proj-dot" style="background:#97C459;"></div><span id="proj-6mo"></span></div>
+    <div class="proj-row"><div class="proj-dot" style="background:#1D9E75;"></div><span id="proj-debtfree"></span></div>
+    <div class="proj-note">Score projections are estimates. Actual results depend on your full credit profile.</div>
+  </div>
+
+</div>
+<script>
+const mNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fmt = n => Math.round(n).toLocaleString('en-US');
+const fmtDec = n => parseFloat(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+const today = new Date();
+document.getElementById('today-date').textContent =
+  mNames[today.getMonth()] + ' ' + today.getDate() + ', ' + today.getFullYear();
+const startYear = today.getMonth() === 11 ? today.getFullYear()+1 : today.getFullYear();
+const startMonthIdx = (today.getMonth()+1) % 12;
+document.getElementById('start-month-label').textContent = mNames[startMonthIdx] + ' ' + startYear;
+
+function mLabel(offset) {
+  const d = new Date(startYear, startMonthIdx + offset);
+  return mNames[d.getMonth()] + ' ' + d.getFullYear();
+}
+
+function recalcDebt() {
+  const startBalance = parseFloat(document.getElementById('inp-balance').value) || 0;
+  const payment = parseFloat(document.getElementById('inp-payment').value) || 1;
+  const apr = parseFloat(document.getElementById('inp-apr').value) || 0;
+  const rate = apr / 100 / 12;
+  const firstInt = startBalance * rate;
+
+  document.getElementById('disp-balance').textContent = '$' + fmt(startBalance);
+  document.getElementById('disp-payment').textContent = '$' + fmt(payment);
+
+  if (payment <= firstInt && startBalance > 0) {
+    document.getElementById('summary').innerHTML =
+      '<span class="warn">&#9888; Payment must exceed the first month\'s interest of <strong>$' + fmtDec(firstInt) + '</strong> to pay off this debt.</span>';
+    ['payoff-time','target-date','int-saved','total-int','total-paid'].forEach(id =>
+      document.getElementById(id).textContent = '—');
+    document.getElementById('end-label').textContent = '';
+    document.getElementById('table-body').innerHTML = '';
+    updateProjCard(0, '—');
+    return;
+  }
+
+  let bal = startBalance, rows = [], ti = 0;
+  while (bal > 0 && rows.length < 600) {
+    const int = bal * rate; let pmt, p;
+    if (bal + int <= payment) { pmt = bal + int; p = bal; bal = 0; }
+    else { pmt = payment; p = payment - int; bal -= p; }
+    ti += int;
+    rows.push({
+      month: rows.length + 1, date: mLabel(rows.length),
+      pmt, interest: int, principal: p,
+      balance: Math.max(0, bal),
+      pctPaid: Math.round((startBalance - Math.max(0, bal)) / startBalance * 100)
+    });
+  }
+
+  const tp = startBalance + ti, n = rows.length;
+  const yrs = Math.floor(n/12), mos = n%12;
+  document.getElementById('payoff-time').textContent = yrs > 0 ? (mos > 0 ? yrs+'y '+mos+'mo' : yrs+'y') : mos+'mo';
+  document.getElementById('target-date').textContent = rows[n-1].date;
+
+  let mb = startBalance, mi = 0;
+  for (let i = 0; i < 600; i++) {
+    const ic = mb * rate, mp = Math.max(25, mb * 0.02);
+    if (mb + ic <= mp) { mi += ic; break; }
+    mi += ic; mb = mb + ic - mp;
+    if (mb < 0.01) break;
+  }
+
+  document.getElementById('int-saved').textContent = '$' + fmt(Math.max(0, mi - ti));
+  document.getElementById('total-int').textContent = '$' + fmt(ti);
+  document.getElementById('total-paid').textContent = '$' + fmt(tp);
+  document.getElementById('end-label').textContent = 'Month ' + n + ' \u2014 debt free';
+  document.getElementById('summary').innerHTML =
+    'Paying <strong>$' + fmt(payment) + '/month</strong>, you\'ll be debt-free in <strong>' + n +
+    ' months</strong> \u2014 paying only <strong style="color:#f97316;">$' + fmt(Math.round(ti)) +
+    ' in interest</strong> on your $' + fmt(startBalance) + ' balance.';
+
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML = '';
+  rows.forEach((r, idx) => {
+    const tr = document.createElement('tr');
+    if (idx === n-1) tr.className = 'last-row';
+    tr.innerHTML =
+      '<td>' + r.month + '</td>' +
+      '<td>' + r.date + '</td>' +
+      '<td>$' + (r.pmt >= payment - 0.01 ? fmt(payment) : fmtDec(r.pmt)) + '</td>' +
+      '<td class="or">$' + fmtDec(r.interest) + '</td>' +
+      '<td class="gr">$' + fmtDec(r.principal) + '</td>' +
+      '<td>' + (r.balance > 0 ? '$' + fmt(r.balance) : '$0') + '</td>' +
+      '<td><span class="mini-bar" style="width:' + Math.min(r.pctPaid * 0.7, 70) + 'px;"></span> ' +
+      r.pctPaid + '%' + (idx === n-1 ? '<span class="done-badge">Done</span>' : '') + '</td>';
+    tbody.appendChild(tr);
+  });
+
+  updateProjCard(n, rows[n-1].date);
+}
+
+function getBand(s) {
+  if (s < 580) return { label:'Poor',       bg:'#fee2e2', text:'#991b1b' };
+  if (s < 670) return { label:'Fair',       bg:'#fef3c7', text:'#92400e' };
+  if (s < 740) return { label:'Good',       bg:'#dcfce7', text:'#166534' };
+  if (s < 800) return { label:'Very Good',  bg:'#d1fae5', text:'#065f46' };
+  return             { label:'Exceptional', bg:'#a7f3d0', text:'#064e3b' };
+}
+
+function tickerColor(s) {
+  if (s < 580) return { bg:'#E24B4A', text:'#fff' };
+  if (s < 670) return { bg:'#EF9F27', text:'#4A2400' };
+  if (s < 740) return { bg:'#5a8a1a', text:'#fff' };
+  if (s < 800) return { bg:'#1D9E75', text:'#fff' };
+  return              { bg:'#0F6E56', text:'#fff' };
+}
+
+function updateProjCard(months, debtFreeDate) {
+  const ex = parseInt(document.getElementById('score-ex').value) || 600;
+  const eq = parseInt(document.getElementById('score-eq').value) || 608;
+  const tu = parseInt(document.getElementById('score-tu').value) || 608;
+  const minS = Math.min(ex,eq,tu), maxS = Math.max(ex,eq,tu);
+  const avgS = Math.round((ex+eq+tu)/3);
+  const band = getBand(avgS);
+  const ptsToGood = avgS < 670 ? 670 - avgS : 0;
+  const range = minS === maxS ? String(minS) : minS + '\u2013' + maxS;
+  document.getElementById('proj-now').innerHTML =
+    '<strong>Now:</strong> ' + range + ' ' + band.label +
+    (ptsToGood > 0 ? ' \u2014 ' + ptsToGood + ' pts from Good' : ' \u2014 already Good or better!');
+  document.getElementById('proj-6mo').innerHTML =
+    '<strong>~6 months:</strong> Utilization drops ~50% \u2192 est. score improvement of 30\u201350 pts';
+  document.getElementById('proj-debtfree').innerHTML = months > 0
+    ? '<strong>~' + months + ' months (' + debtFreeDate + ', debt-free):</strong> Utilization near 0% \u2192 est. 670\u2013710+'
+    : '<strong>Debt-free:</strong> Utilization near 0% \u2192 est. 670\u2013710+';
+}
+
+const MIN = 300, MAX = 850, RANGE = MAX - MIN;
+const scorePct = s => (Math.max(MIN, Math.min(MAX, s)) - MIN) / RANGE;
+const segments = [['#E24B4A',300,580],['#EF9F27',580,670],['#97C459',670,740],['#1D9E75',740,800],['#0F6E56',800,850]];
+const canvas = document.getElementById('score-bar');
+
+function drawBar() {
+  const W = canvas.offsetWidth || 800;
+  canvas.width = W;
+  const ctx = canvas.getContext('2d');
+  segments.forEach(([c,s,e]) => {
+    ctx.fillStyle = c;
+    const x = scorePct(s) * W;
+    ctx.fillRect(x, 0, scorePct(e)*W - x, 12);
+  });
+}
+drawBar();
+window.addEventListener('resize', () => { drawBar(); renderTickers(); });
+
+[{id:'lbl580',s:580},{id:'lbl670',s:670},{id:'lbl740',s:740},{id:'lbl800',s:800}].forEach(b => {
+  document.getElementById(b.id).style.left = (scorePct(b.s)*100).toFixed(2) + '%';
+});
+
+function renderTickers() {
+  const area = document.getElementById('stagger-area');
+  area.innerHTML = '';
+  const scoreData = [
+    { label:'EX', score: parseInt(document.getElementById('score-ex').value) || 300 },
+    { label:'EQ', score: parseInt(document.getElementById('score-eq').value) || 300 },
+    { label:'TU', score: parseInt(document.getElementById('score-tu').value) || 300 },
+  ];
+  scoreData.forEach((s, row) => {
+    const sc = Math.max(300, Math.min(850, s.score));
+    const { bg, text } = tickerColor(sc);
+    const leftPct = (scorePct(sc)*100).toFixed(2) + '%';
+    const topPx = row * 24, stemH = 78 - topPx - 24;
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:absolute;left:'+leftPct+';transform:translateX(-50%);top:'+topPx+'px;display:flex;flex-direction:column;align-items:center;';
+    const pill = document.createElement('div');
+    pill.style.cssText = 'background:'+bg+';color:'+text+';font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;white-space:nowrap;line-height:18px;';
+    pill.textContent = s.label + ' ' + sc;
+    wrap.appendChild(pill);
+    const stem = document.createElement('div');
+    stem.style.cssText = 'width:2px;background:'+bg+';height:'+stemH+'px;';
+    wrap.appendChild(stem);
+    area.appendChild(wrap);
+  });
+}
+
+function recalcScores() {
+  [['score-ex','pill-ex'],['score-eq','pill-eq'],['score-tu','pill-tu']].forEach(([inp, pillId]) => {
+    let v = parseInt(document.getElementById(inp).value) || 300;
+    v = Math.max(300, Math.min(850, v));
+    const band = getBand(v);
+    const pill = document.getElementById(pillId);
+    pill.textContent = band.label;
+    pill.style.background = band.bg;
+    pill.style.color = band.text;
+  });
+  renderTickers();
+  const targetDate = document.getElementById('target-date').textContent;
+  const endLabel = document.getElementById('end-label').textContent;
+  const m = endLabel.match(/Month (\d+)/);
+  updateProjCard(m ? parseInt(m[1]) : 0, targetDate);
+}
+
+['inp-balance','inp-payment','inp-apr'].forEach(id =>
+  document.getElementById(id).addEventListener('input', recalcDebt));
+['score-ex','score-eq','score-tu'].forEach(id =>
+  document.getElementById(id).addEventListener('input', recalcScores));
+
+recalcDebt();
+recalcScores();
+</script>
+</body>
+</html>
